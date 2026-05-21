@@ -10,11 +10,18 @@ nameOverride: ""
 fullnameOverride: ""
 
 config:
+  # REQUIRED: Public URL where this add-in will be accessible (e.g. https://teams.example.com)
   BASE_URL: "https://teams.yourdomain.com"
+  # Azure App type: MultiTenant, SingleTenant, or UserAssignedMSI. Leave empty for MultiTenant.
   MSAPP_TYPE: ""
+  # REQUIRED: Azure App (client) ID used for bot auth and the on-behalf-of token exchange
   MSAPP_ID: "your-app-id"
+  # Azure Tenant ID — required when MSAPP_TYPE is SingleTenant, otherwise ignored
   MSAPP_TENANT_ID: "your-tenant-id"
+  # Default Nextcloud server URL returned to the add-in
   DEFAULT_NEXTCLOUD_URL: "https://nextcloud.yourdomain.com"
+  # Target URL for the /proxy/* request proxy. Leave empty to use the BaseUrl from the app config.
+  PROXY_PLACEHOLDER_URL: ""
 
 secret:
   MSAPP_PASSWORD: "your-secure-password"

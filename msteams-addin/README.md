@@ -48,14 +48,15 @@ The chart creates a `ClusterIP` service on port 4200. See [Exposing the add-in](
 
 ### Application Parameters
 
-| Parameter | Description | Default |
-| --- | --- | --- |
-| `config.BASE_URL` | Public URL where the add-in will be accessible | `"https://teams.yourdomain.com"` |
-| `config.DEFAULT_NEXTCLOUD_URL` | Nextcloud server URL | `"https://nextcloud.yourdomain.com"` |
-| `config.MSAPP_TYPE` | Type of Microsoft App | `""` |
-| `config.MSAPP_ID` | Azure App ID | `"your-app-id"` |
-| `config.MSAPP_TENANT_ID` | Azure Tenant ID | `"your-tenant-id"` |
-| `secret.MSAPP_PASSWORD` | Azure App Client Secret/Password | `"your-secure-password"` |
+| Parameter | Description | Required | Default |
+| --- | --- | --- | --- |
+| `config.BASE_URL` | Public URL where the add-in will be accessible | Yes | `"https://teams.yourdomain.com"` |
+| `config.DEFAULT_NEXTCLOUD_URL` | Default Nextcloud server URL returned to the add-in | No | `"https://nextcloud.yourdomain.com"` |
+| `config.MSAPP_TYPE` | Azure App type: `MultiTenant`, `SingleTenant`, or `UserAssignedMSI`. Leave empty to default to `MultiTenant` | No | `""` |
+| `config.MSAPP_ID` | Azure App (client) ID used for bot authentication and the on-behalf-of token exchange | Yes | `"your-app-id"` |
+| `config.MSAPP_TENANT_ID` | Azure Tenant ID (required for `SingleTenant` apps; ignored otherwise) | Conditional | `"your-tenant-id"` |
+| `config.PROXY_PLACEHOLDER_URL` | Target URL for the `/proxy/*` request proxy. Override when running against a non-default Nextcloud host | No | `""` |
+| `secret.MSAPP_PASSWORD` | Azure App client secret. Stored in a Kubernetes `Secret` | Yes | `"your-secure-password"` |
 
 ### Deployment Parameters
 
@@ -98,12 +99,12 @@ Install them if they are not already present on your cluster:
 
 ```bash
 # Ingress controller
-helm repo add ingress-nginx [https://kubernetes.github.io/ingress-nginx](https://kubernetes.github.io/ingress-nginx)
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm install ingress-nginx ingress-nginx/ingress-nginx \
   --namespace ingress-nginx --create-namespace
 
 # cert-manager
-helm repo add jetstack [https://charts.jetstack.io](https://charts.jetstack.io)
+helm repo add jetstack https://charts.jetstack.io
 helm install cert-manager jetstack/cert-manager \
   --namespace cert-manager --create-namespace \
   --set crds.enabled=true
@@ -120,7 +121,7 @@ metadata:
   name: letsencrypt-prod
 spec:
   acme:
-    server: [https://acme-v02.api.letsencrypt.org/directory](https://acme-v02.api.letsencrypt.org/directory)
+    server: https://acme-v02.api.letsencrypt.org/directory
     email: your-email@example.com
     privateKeySecretRef:
       name: letsencrypt-prod
@@ -170,7 +171,7 @@ Adjust `className`, `annotations`, `pathType`, and `tls` to match your cluster's
 If you prefer to manage routing outside of Kubernetes, keep the default `ClusterIP` service and point your existing reverse proxy (e.g., Nginx, Caddy) at the service. You can use `kubectl port-forward` to expose the service locally:
 
 ```bash
-kubectl port-forward svc/sendent-msteams-msteams-addin 4200:4200
+kubectl port-forward svc/sendent-msteams 4200:4200
 
 ```
 
