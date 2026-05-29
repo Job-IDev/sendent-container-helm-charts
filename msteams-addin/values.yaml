@@ -20,11 +20,20 @@ config:
   MSAPP_TENANT_ID: "your-tenant-id"
   # Default Nextcloud server URL returned to the add-in
   DEFAULT_NEXTCLOUD_URL: "https://nextcloud.yourdomain.com"
-  # Target URL for the /proxy/* request proxy. Leave empty to use the BaseUrl from the app config.
-  PROXY_PLACEHOLDER_URL: ""
+  # Fallback target for the /proxy/* request proxy. Normally overridden per-request
+  # via the `sendent-apiurl` header; this value is only used when that header is missing.
+  PROXY_PLACEHOLDER_URL: "https://placeholder.sendent.dev"
 
 secret:
-  MSAPP_PASSWORD: "your-secure-password"
+  # Reference an externally-managed Secret (created by kubectl, Sealed Secrets,
+  # External Secrets Operator, etc.) instead of having the chart create one.
+  # When set, `MSAPP_PASSWORD` below is ignored and no Secret is rendered.
+  existingSecret: ""
+  # Key within the existing Secret holding the Azure App client secret.
+  existingSecretKey: "MSAPP_PASSWORD"
+  # Azure App client secret. Only used when `existingSecret` is empty.
+  # Leave blank to force callers to provide it via --set or a values file.
+  MSAPP_PASSWORD: ""
 
 service:
   type: ClusterIP

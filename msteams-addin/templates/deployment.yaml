@@ -31,8 +31,12 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "sendent-msteams.fullname" . }}
-            - secretRef:
-                name: {{ include "sendent-msteams.fullname" . }}-secret
+          env:
+            - name: MSAPP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.existingSecret | default (printf "%s-secret" (include "sendent-msteams.fullname" .)) }}
+                  key: {{ .Values.secret.existingSecretKey | default "MSAPP_PASSWORD" }}
           volumeMounts:
             - name: docker-config
               mountPath: /usr/src/app/docker-config

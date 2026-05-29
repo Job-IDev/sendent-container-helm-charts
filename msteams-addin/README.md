@@ -55,8 +55,10 @@ The chart creates a `ClusterIP` service on port 4200. See [Exposing the add-in](
 | `config.MSAPP_TYPE` | Azure App type: `MultiTenant`, `SingleTenant`, or `UserAssignedMSI`. Leave empty to default to `MultiTenant` | No | `""` |
 | `config.MSAPP_ID` | Azure App (client) ID used for bot authentication and the on-behalf-of token exchange | Yes | `"your-app-id"` |
 | `config.MSAPP_TENANT_ID` | Azure Tenant ID (required for `SingleTenant` apps; ignored otherwise) | Conditional | `"your-tenant-id"` |
-| `config.PROXY_PLACEHOLDER_URL` | Target URL for the `/proxy/*` request proxy. Override when running against a non-default Nextcloud host | No | `""` |
-| `secret.MSAPP_PASSWORD` | Azure App client secret. Stored in a Kubernetes `Secret` | Yes | `"your-secure-password"` |
+| `config.PROXY_PLACEHOLDER_URL` | Fallback target for the `/proxy/*` request proxy (the per-request `sendent-apiurl` header normally overrides this) | No | `"https://placeholder.sendent.dev"` |
+| `secret.MSAPP_PASSWORD` | Azure App client secret. Ignored when `secret.existingSecret` is set | Conditional | `""` |
+| `secret.existingSecret` | Name of an externally-managed `Secret` to read the client secret from instead of creating one. See [Managing the client secret externally](#managing-the-client-secret-externally) | No | `""` |
+| `secret.existingSecretKey` | Key within `secret.existingSecret` holding the client secret | No | `"MSAPP_PASSWORD"` |
 
 ### Deployment Parameters
 
@@ -85,6 +87,31 @@ resources:
     memory: 256Mi
 
 ```
+
+## Managing the client secret externally
+
+By default, the chart creates a Kubernetes `Secret` from the value of `secret.MSAPP_PASSWORD`. This is convenient for getting started but ties the secret to your values file. For production, you'll usually want to manage the secret out-of-band and point the chart at it via `secret.existingSecret`.
+
+Create the Secret yourself, by whatever means you prefer. For example:
+
+```bash
+kubectl create secret generic msteams-azure \
+  --from-literal=MSAPP_PASSWORD='your-real-client-secret'
+```
+
+Then reference it from your values file and leave `secret.MSAPP_PASSWORD` unset:
+
+```yaml
+secret:
+  existingSecret: msteams-azure
+  # existingSecretKey defaults to MSAPP_PASSWORD; override if your Secret uses a different key
+  # existingSecretKey: client-secret
+```
+
+The same pattern works with any tool that produces a regular `Secret` resource:
+
+- **[External Secrets Operator](https://external-secrets.io/)**: sync the value from Vault, AWS Secrets Manager, 1Password, etc. via an `ExternalSecret` CR that targets a Secret named `msteams-azure`.
+- **[Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets)**: encrypt a `Secret` with `kubeseal` and commit the resulting `SealedSecret` to git; the in-cluster controller decrypts it into the regular Secret the chart will read.
 
 ## Exposing the add-in
 
